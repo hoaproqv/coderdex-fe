@@ -111,7 +111,7 @@ export const getPokemons =
     try {
       let params = `?page=${page}&limit=${POKEMONS_PER_PAGE}`;
       if (search) params += `&search=${search}`;
-      if (type) params += `&type=${type}`;
+      if (type && type !== "none") params += `&type=${type}`;
       const response = await apiService.get(`/pokemons${params}`);
       dispatch(
         pokemonSlice.actions.getPokemonsSuccess({
