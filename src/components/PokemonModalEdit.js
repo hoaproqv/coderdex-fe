@@ -15,13 +15,12 @@ import {
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 
-import { addPokemon, getPokemonById } from "../features/pokemons/pokemonSlice";
-import { useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { deletePokemon, editPokemon } from "../features/pokemons/pokemonSlice";
+import React, { useEffect, useRef, useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-
 import { TYPESPKM, style, imageUrl } from "../global/variable";
+import { useNavigate } from "react-router-dom";
 
 //Schema
 const schema = yup
@@ -31,50 +30,30 @@ const schema = yup
   })
   .required();
 
-const defaultValues = {
-  name: "",
-  id: "",
-  height: "",
-  weight: "",
-  attack: "",
-  defense: "",
-  hp: "",
-  spAtk: "",
-  spDef: "",
-  speed: "",
-  evolvesId: "",
-  generation: "",
-  hiddenAbility: "",
-  ability1: "",
-  ability2: "",
-};
-
-export default function PokemonModal({ open, setOpen }) {
-  //useSelector
+export default function PokemonModalEdit({ openEdit, setOpenEdit }) {
+  // useSelector
+  const pokemon = useSelector((state) => state.pokemons.pokemon.pokemon);
   const { isLoading } = useSelector((state) => state.pokemons);
-
   //useState
-  const [type1, setType1] = useState("");
-  const [type2, setType2] = useState("");
   const [errorStatus, setErrorStatus] = useState(false);
+  const [type1, setType1] = useState(pokemon?.type_1);
+  const [type2, setType2] = useState(pokemon?.type_2);
   const [selectedFileName, setSelectedFileName] = useState("");
-
-  //useForm
-  const methods = useForm({ defaultValues, resolver: yupResolver(schema) });
-  const {
-    handleSubmit,
-    setValue,
-    formState: { isSubmitting },
-  } = methods;
 
   //useRef
   const fileRef = useRef();
 
-  //dispatch, navigate
-  const navigate = useNavigate();
+  //useForm, dispatch, navigate
+  const methods = useForm({ resolver: yupResolver(schema) });
+  const {
+    handleSubmit,
+    setValue,
+    formState: { isSubmitting, errors },
+  } = methods;
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  //handle
+  //handleFunction
   const handleSetType1 = (event) => {
     setType1(event.target.value);
   };
@@ -82,17 +61,31 @@ export default function PokemonModal({ open, setOpen }) {
   const handleSetType2 = (event) => {
     setType2(event.target.value);
   };
-  const handleClose = () => setOpen(false);
+
+  const handleCloseModal = () => setOpenEdit(false);
+
+  const handleDeletePkm = () => {
+    dispatch(deletePokemon(pokemon.id));
+    navigate("/");
+    setOpenEdit(false);
+  };
 
   const handleFileChange = (event) => {
     setSelectedFileName(event.target.files[0].name);
     const file = fileRef.current.files[0];
     if (file) {
       setValue("image", file);
+    } else {
+      setValue("image", null);
     }
   };
 
-  //useEffect
+  //other
+  function firstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
+  // useEffect
   useEffect(() => {
     if (type1 === type2) {
       setErrorStatus(true);
@@ -101,12 +94,34 @@ export default function PokemonModal({ open, setOpen }) {
     }
   }, [type1, type2]);
 
-  //submit
+  useEffect(() => {
+    setValue("name", pokemon?.pokemon);
+    setValue("id", pokemon?.id);
+    setValue("height", pokemon?.height);
+    setValue("weight", pokemon?.weight);
+    setValue("attack", pokemon?.attack);
+    setValue("defense", pokemon?.defense);
+    setValue("hp", pokemon?.hp);
+    setValue("spAtk", pokemon?.special_attack);
+    setValue("spDef", pokemon?.special_defense);
+    setValue("speed", pokemon?.speed);
+    setValue("evolvesId", pokemon?.evolves_from_species_id);
+    setValue("generation", pokemon?.generation_id);
+    setValue("hiddenAbility", pokemon?.ability_hidden);
+    setValue("ability1", pokemon?.ability_1);
+    setValue("ability2", pokemon?.ability_2);
+    setValue("imgUrl", pokemon?.url_image);
+    setType1(pokemon?.type_1);
+    setType2(pokemon?.type_2);
+  }, [pokemon, setValue]);
+
+  //Submit
   const onSubmit = (data) => {
     const {
       name,
       id,
       image,
+      imgUrl,
       height,
       weight,
       attack,
@@ -121,56 +136,50 @@ export default function PokemonModal({ open, setOpen }) {
       ability1,
       ability2,
     } = data;
-
-    getPokemonById(id);
-
-    dispatch(
-      addPokemon({
-        name,
-        id: String(id),
-        image,
-        types: [type1, type2],
-        height,
-        weight,
-        attack,
-        defense,
-        hp,
-        spAtk,
-        spDef,
-        speed,
-        evolvesId,
-        generation,
-        hiddenAbility,
-        abilities: [ability1, ability2],
-      }),
-    );
-
-    setOpen(false);
-    setTimeout(() => {
-      navigate(`/pokemons/${id}`);
-    }, 3000);
+    if (!errors || !type1 || !type2) {
+      setOpenEdit(false);
+    } else {
+      dispatch(
+        editPokemon({
+          name,
+          id: String(id),
+          image,
+          imgUrl,
+          types: [type1, type2],
+          height,
+          weight,
+          attack,
+          defense,
+          hp,
+          spAtk,
+          spDef,
+          speed,
+          evolvesId,
+          generation,
+          hiddenAbility,
+          abilities: [ability1, ability2],
+        }),
+      );
+      setOpenEdit(false);
+    }
   };
-
-  //other
-  function firstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  }
 
   return (
     <div>
       <Modal
-        open={open}
-        onClose={handleClose}
+        open={openEdit}
+        onClose={handleCloseModal}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
           <FormProvider methods={methods} onSubmit={handleSubmit(onSubmit)}>
             <Box spacing={2}>
-              <Grid container spacing={1}>
+              <Grid container spacing={2}>
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="name"
+                    label="Name"
                     fullWidth
                     rows={4}
                     placeholder="Name"
@@ -186,8 +195,9 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="id"
+                    label="ID pokemon"
                     fullWidth
-                    placeholder="Id Pokemon"
+                    placeholder="Id (min: 722)"
                     sx={{
                       "& fieldset": {
                         borderWidth: `1px !important`,
@@ -297,6 +307,7 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="ability1"
+                    label="Ability 1"
                     fullWidth
                     rows={4}
                     placeholder="Ability 1"
@@ -311,6 +322,7 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="ability2"
+                    label="Ability 2"
                     fullWidth
                     rows={4}
                     placeholder="Ability 2"
@@ -325,6 +337,7 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="hiddenAbility"
+                    label="Hidden Ability"
                     fullWidth
                     rows={4}
                     placeholder="Hidden Ability"
@@ -339,6 +352,7 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="height"
+                    label="Height"
                     fullWidth
                     rows={4}
                     placeholder="Height"
@@ -353,6 +367,7 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="weight"
+                    label="Weight"
                     fullWidth
                     rows={4}
                     placeholder="Weight"
@@ -368,6 +383,7 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="generation"
+                    label="Generation"
                     fullWidth
                     rows={4}
                     placeholder="Generation"
@@ -382,9 +398,10 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="evolvesId"
+                    label="Evolves from id"
                     fullWidth
                     rows={4}
-                    placeholder="Evolves from"
+                    placeholder="Evolves"
                     sx={{
                       "& fieldset": {
                         borderWidth: `1px !important`,
@@ -396,6 +413,7 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="hp"
+                    label="HP"
                     fullWidth
                     rows={4}
                     placeholder="HP"
@@ -410,6 +428,7 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="attack"
+                    label="Attack"
                     fullWidth
                     rows={4}
                     placeholder="Attack"
@@ -424,6 +443,7 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="defense"
+                    label="Defense"
                     fullWidth
                     rows={4}
                     placeholder="Defense"
@@ -438,6 +458,7 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="spAtk"
+                    label="Special Attack"
                     fullWidth
                     rows={4}
                     placeholder="Special Attack"
@@ -452,6 +473,7 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="spDef"
+                    label="Special Defense"
                     fullWidth
                     rows={4}
                     placeholder="Special Defense"
@@ -466,6 +488,7 @@ export default function PokemonModal({ open, setOpen }) {
                 <Grid item xs={4} md={3}>
                   <FTextField
                     name="speed"
+                    label="Speed"
                     fullWidth
                     rows={4}
                     placeholder="Speed"
@@ -486,12 +509,24 @@ export default function PokemonModal({ open, setOpen }) {
                 }}
               >
                 <LoadingButton
+                  style={{
+                    marginRight: 5,
+                    backgroundColor: "red",
+                  }}
+                  onClick={handleDeletePkm}
+                  variant="contained"
+                  size="small"
+                  loading={isSubmitting || isLoading}
+                >
+                  Delete Pokemon
+                </LoadingButton>
+                <LoadingButton
                   type="submit"
                   variant="contained"
                   size="small"
                   loading={isSubmitting || isLoading}
                 >
-                  Create Pokemon
+                  Update Pokemon
                 </LoadingButton>
               </Box>
             </Box>

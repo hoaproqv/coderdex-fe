@@ -1,189 +1,269 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import apiService from '../../app/apiService';
-import { POKEMONS_PER_PAGE } from '../../app/config';
+import { createSlice } from "@reduxjs/toolkit";
+import apiService from "../../app/apiService";
+import { POKEMONS_PER_PAGE } from "../../app/config";
+import { toast } from "react-toastify";
+import { cloudinaryUpload } from "../cloundinary";
 
-export const getPokemons = createAsyncThunk('pokemons/getPokemons', async ({ page, search, type }, { rejectWithValue }) => {
-    try {
-        let url = `/pokemons?page=${page}&limit=${POKEMONS_PER_PAGE}`;
-        if (search) url += `&search=${search}`;
-        if (type) url += `&type=${type}`;
-        const response = await apiService.get(url);
-        const timeout = () => {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve('ok');
-                }, 1000);
-            });
-        };
-        await timeout();
-        return response.data;
-    } catch (error) {
-        return rejectWithValue(error);
-    }
-});
-
-export const getPokemonById = createAsyncThunk('pokemons/getPokemonById', async (id, { rejectWithValue }) => {
-    try {
-        let url = `/pokemons/${id}`;
-        const response = await apiService.get(url);
-        if (!response.data) return rejectWithValue({ message: 'No data' });
-        return response.data;
-    } catch (error) {
-        return rejectWithValue(error);
-    }
-});
-
-export const addPokemon = createAsyncThunk(
-    'pokemons/addPokemon',
-    async ({ name, id, imgUrl, types }, { rejectWithValue }) => {
-        try {
-            let url = '/pokemons';
-            await apiService.post(url, { name, id, url: imgUrl, types });
-            return
-        } catch (error) {
-            return rejectWithValue(error)
-        }
-    }
-)
-
-export const editPokemon = createAsyncThunk('pokemons/editPokemon', async ({ name, id, url, types }, { rejectWithValue }) => {
-    try {
-        let url = `/pokemons/${id}`;
-        await apiService.put(url, { name, url, types });
-        return;
-    } catch (error) {
-        return rejectWithValue(error);
-    }
-});
-
-export const deletePokemon = createAsyncThunk('pokemons/deletePokemon', async ({ id }, { rejectWithValue, dispatch }) => {
-    try {
-        let url = `/pokemons/${id}`;
-        await apiService.delete(url);
-        dispatch(getPokemonById());
-        return;
-    } catch (error) {
-        return rejectWithValue(error);
-    }
-});
-
-export const pokemonSlice = createSlice({
-    name: 'pokemons',
-    initialState: {
-        isLoading: false,
-        pokemons: [],
-        pokemon: {
-            pokemon: null,
-            nextPokemon: null,
-            previousPokemon: null,
-        },
-        search: '',
-        type: '',
-        page: 1,
+const pokemonSlice = createSlice({
+  name: "pokemons",
+  initialState: {
+    isLoading: false,
+    error: null,
+    pokemons: [],
+    pokemon: {
+      previousPokemon: null,
+      pokemon: null,
+      nextPokemon: null,
     },
-    reducers: {
-        changePage: (state, action) => {
-            if (action.payload) {
-                state.page = action.payload;
-            } else {
-                state.page++;
-            }
-        },
-        typeQuery: (state, action) => {
-            state.type = action.payload;
-        },
-        searchQuery: (state, action) => {
-            state.search = action.payload;
-        },
+    pokemonEvolves: null,
+    search: "",
+    type: "",
+    page: 1,
+    totalPages: 1,
+    next: false,
+  },
+  reducers: {
+    startLoading(state) {
+      state.isLoading = true;
     },
-    extraReducers: {
-        [getPokemons.pending]: (state, action) => {
-            state.loading = true;
-            state.errorMessage = '';
-        },
-        [getPokemonById.pending]: (state) => {
-            state.loading = true;
-            state.errorMessage = '';
-        },
-
-        [addPokemon.pending]: (state) => {
-            state.loading = true;
-            state.errorMessage = '';
-        },
-        [deletePokemon.pending]: (state) => {
-            state.loading = true;
-            state.errorMessage = '';
-        },
-        [editPokemon.pending]: (state) => {
-            state.loading = true;
-            state.errorMessage = '';
-        },
-        [getPokemons.fulfilled]: (state, action) => {
-            state.loading = false;
-            const { search, type } = state;
-            if ((search || type) && state.page === 1) {
-                state.pokemons = action.payload;
-            } else {
-                state.pokemons = [...state.pokemons, ...action.payload];
-            }
-        },
-        [getPokemonById.fulfilled]: (state, action) => {
-            state.loading = false;
-            state.pokemon = action.payload;
-        },
-        [addPokemon.fulfilled]: (state) => {
-            state.loading = false;
-        },
-        [deletePokemon.fulfilled]: (state) => {
-            state.loading = false;
-        },
-        [editPokemon.fulfilled]: (state) => {
-            state.loading = true;
-        },
-        [getPokemons.rejected]: (state, action) => {
-            state.loading = false;
-            if (action.payload) {
-                state.errorMessage = action.payload.message;
-            } else {
-                state.errorMessage = action.error.message;
-            }
-        },
-        [getPokemonById.rejected]: (state, action) => {
-            state.loading = false;
-            if (action.payload) {
-                state.errorMessage = action.payload.message;
-            } else {
-                state.errorMessage = action.error.message;
-            }
-        },
-
-        [addPokemon.rejected]: (state, action) => {
-            state.loading = false;
-            if (action.payload) {
-                state.errorMessage = action.payload.message;
-            } else {
-                state.errorMessage = action.error.message;
-            }
-        },
-        [deletePokemon.rejected]: (state, action) => {
-            state.loading = false;
-            if (action.payload) {
-                state.errorMessage = action.payload.message;
-            } else {
-                state.errorMessage = action.error.message;
-            }
-        },
-        [editPokemon.rejected]: (state, action) => {
-            state.loading = false;
-            if (action.payload) {
-                state.errorMessage = action.payload.message;
-            } else {
-                state.errorMessage = action.error.message;
-            }
-        },
+    hasError(state, action) {
+      state.isLoading = false;
+      state.error = action.payload;
     },
+    getPokemonsSuccess(state, action) {
+      state.isLoading = false;
+      state.error = null;
+      state.pokemon = {
+        previousPokemon: null,
+        pokemon: null,
+        nextPokemon: null,
+      };
+      if (state.page === 1) {
+        state.pokemons = [];
+        state.next = false;
+      }
+      const { data, page, totalPages } = action.payload;
+      state.totalPages = Number(totalPages);
+      state.page = Number(page);
+      state.pokemons = state.pokemons.concat(data);
+    },
+    getPokemonByIdSuccess(state, action) {
+      state.isLoading = false;
+      state.error = null;
+
+      state.pokemon.previousPokemon = action.payload[0];
+      state.pokemon.pokemon = action.payload[1];
+      state.pokemon.nextPokemon = action.payload[2];
+      if (state.pokemon.pokemon["type_2"] !== "NA") {
+        state.types = [
+          state.pokemon.pokemon["type_1"],
+          state.pokemon.pokemon["type_2"],
+        ];
+      } else {
+        state.types = [state.pokemon.pokemon["type_1"]];
+      }
+    },
+    getEvolvesSuccess(state, action) {
+      state.isLoading = false;
+      state.error = null;
+
+      state.pokemonEvolves = action.payload[1];
+    },
+    addPokemonSuccess(state, action) {
+      state.isLoading = false;
+      state.error = null;
+
+      state.pokemons.push(action.payload);
+    },
+    updatePokemonSuccess(state, action) {
+      state.isLoading = false;
+      state.error = null;
+
+      state.pokemon.pokemon = action.payload;
+    },
+    deletePokemonByIdSuccess(state, action) {
+      state.isLoading = false;
+      state.error = null;
+    },
+    changePage(state, action) {
+      if (action.payload) {
+        state.page = action.payload;
+      } else {
+        state.page++;
+      }
+    },
+    searchQuery(state, action) {
+      state.search = action.payload;
+    },
+    typeQuery(state, action) {
+      state.type = action.payload;
+    },
+    setNext(state, action) {
+      state.next = action.payload;
+    },
+  },
 });
 
-const { actions, reducer } = pokemonSlice;
-export const { changePage, searchQuery, typeQuery } = actions;
-export default reducer;
+export const getPokemons =
+  ({ page, search, type }) =>
+  async (dispatch) => {
+    dispatch(pokemonSlice.actions.startLoading());
+    try {
+      let params = `?page=${page}&limit=${POKEMONS_PER_PAGE}`;
+      if (search) params += `&search=${search}`;
+      if (type) params += `&type=${type}`;
+      const response = await apiService.get(`/pokemons${params}`);
+      dispatch(
+        pokemonSlice.actions.getPokemonsSuccess({
+          data: response.data,
+          page: response.page,
+          totalPages: response.totalPages,
+        }),
+      );
+    } catch (error) {
+      dispatch(pokemonSlice.actions.hasError(error.message));
+    }
+  };
+
+export const getPokemonById = (id) => async (dispatch) => {
+  dispatch(pokemonSlice.actions.startLoading());
+  try {
+    const response = await apiService.get(`/pokemons/${id}`);
+    dispatch(pokemonSlice.actions.getPokemonByIdSuccess(response.data));
+  } catch (error) {
+    dispatch(pokemonSlice.actions.hasError(error.message));
+  }
+};
+
+export const getEvolves = (id) => async (dispatch) => {
+  dispatch(pokemonSlice.actions.startLoading());
+  try {
+    const response = await apiService.get(`/pokemons/${id}`);
+    dispatch(pokemonSlice.actions.getEvolvesSuccess(response.data));
+  } catch (error) {
+    dispatch(pokemonSlice.actions.hasError(error.message));
+  }
+};
+
+export const addPokemon =
+  ({
+    name,
+    id,
+    image,
+    types,
+    height,
+    weight,
+    attack,
+    defense,
+    hp,
+    spAtk,
+    spDef,
+    speed,
+    evolvesId,
+    generation,
+    hiddenAbility,
+    abilities,
+  }) =>
+  async (dispatch) => {
+    dispatch(pokemonSlice.actions.startLoading());
+    try {
+      const imageUrl = await cloudinaryUpload(image);
+      const body = {
+        id: id,
+        pokemon: name,
+        height: height || "NA",
+        weight: weight || "NA",
+        type_1: types[0],
+        type_2: types[1],
+        attack: attack || "NA",
+        defense: defense || "NA",
+        hp: hp || "NA",
+        special_attack: spAtk || "NA",
+        special_defense: spDef || "NA",
+        speed: speed || "NA",
+        ability_1: abilities[0] || "NA",
+        ability_2: abilities[1] || "NA",
+        ability_hidden: hiddenAbility || "NA",
+        generation_id: generation || "NA",
+        evolves_from_species_id: evolvesId || "NA",
+        url_image: imageUrl,
+      };
+      const response = await apiService.post(`/pokemons`, body);
+      dispatch(pokemonSlice.actions.addPokemonSuccess(response.data));
+      toast.success(response.status);
+    } catch (error) {
+      dispatch(pokemonSlice.actions.hasError(error.message));
+      toast.error(error.message);
+    }
+  };
+
+export const editPokemon =
+  ({
+    name,
+    id,
+    image,
+    imgUrl,
+    types,
+    height,
+    weight,
+    attack,
+    defense,
+    hp,
+    spAtk,
+    spDef,
+    speed,
+    evolvesId,
+    generation,
+    hiddenAbility,
+    abilities,
+  }) =>
+  async (dispatch) => {
+    dispatch(pokemonSlice.actions.startLoading());
+    try {
+      if (image) {
+        var imageUrl = await cloudinaryUpload(image);
+      }
+      const body = {
+        id: id,
+        pokemon: name,
+        height: height || "NA",
+        weight: weight || "NA",
+        type_1: types[0],
+        type_2: types[1] || "NA",
+        attack: attack || "NA",
+        defense: defense || "NA",
+        hp: hp || "NA",
+        special_attack: spAtk || "NA",
+        special_defense: spDef || "NA",
+        speed: speed || "NA",
+        ability_1: abilities[0] || "NA",
+        ability_2: abilities[1] || "NA",
+        ability_hidden: hiddenAbility || "NA",
+        generation_id: generation || "NA",
+        evolves_from_species_id: evolvesId || "NA",
+        url_image: imageUrl || imgUrl,
+      };
+      const response = await apiService.put(`/pokemons/${id}`, body);
+      dispatch(pokemonSlice.actions.updatePokemonSuccess(response.data));
+      toast.success(response.status);
+    } catch (error) {
+      dispatch(pokemonSlice.actions.hasError(error.message));
+      toast.error(error.message);
+    }
+  };
+
+export const deletePokemon = (id) => async (dispatch) => {
+  dispatch(pokemonSlice.actions.startLoading());
+  try {
+    const response = await apiService.delete(`/pokemons/${id}`);
+    dispatch(pokemonSlice.actions.deletePokemonByIdSuccess());
+    toast.success(response.status);
+  } catch (error) {
+    dispatch(pokemonSlice.actions.hasError(error.message));
+    toast.error(error.message);
+  }
+};
+
+export const { changePage, searchQuery, typeQuery, setNext } =
+  pokemonSlice.actions;
+export default pokemonSlice.reducer;
