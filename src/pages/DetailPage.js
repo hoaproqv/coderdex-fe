@@ -36,13 +36,18 @@ const GEN = [
 ];
 
 export const DetailPage = () => {
+  //useSelector
   const { pokemon, nextPokemon, previousPokemon } = useSelector(
     (state) => state.pokemons.pokemon,
   );
   const { pokemonEvolves } = useSelector((state) => state.pokemons);
   const { types } = useSelector((state) => state.pokemons);
+
+  //useParams, dispatch, navigate
   const { id } = useParams();
   const dispatch = useDispatch();
+
+  //useEffect
   useEffect(() => {
     dispatch(getPokemonById(id));
   }, [id, dispatch]);
@@ -51,6 +56,7 @@ export const DetailPage = () => {
     dispatch(getEvolves(pokemon?.evolves_from_species_id));
   }, [pokemon, dispatch]);
 
+  //other
   const weaknesses = calculateWeaknesses(types);
   const kebabCase = (string) => string.replace(/[\s-]+/g, " ");
 

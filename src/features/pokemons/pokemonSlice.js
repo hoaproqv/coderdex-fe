@@ -16,6 +16,7 @@ const pokemonSlice = createSlice({
       nextPokemon: null,
     },
     pokemonEvolves: null,
+    types: [],
     search: "",
     type: "",
     page: 1,
@@ -80,6 +81,14 @@ const pokemonSlice = createSlice({
       state.error = null;
 
       state.pokemon.pokemon = action.payload;
+      if (state.pokemon.pokemon["type_2"] !== "NA") {
+        state.types = [
+          state.pokemon.pokemon["type_1"],
+          state.pokemon.pokemon["type_2"],
+        ];
+      } else {
+        state.types = [state.pokemon.pokemon["type_1"]];
+      }
     },
     deletePokemonByIdSuccess(state, action) {
       state.isLoading = false;
