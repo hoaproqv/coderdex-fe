@@ -52,7 +52,6 @@ export const DetailPage = () => {
   }, [pokemon, dispatch]);
 
   const weaknesses = calculateWeaknesses(types);
-
   const kebabCase = (string) => string.replace(/[\s-]+/g, " ");
 
   const changeCase = (string) =>
@@ -63,12 +62,12 @@ export const DetailPage = () => {
     if (pokemon["ability_1"] === "NA") {
       abilities = "N/A";
     } else if (pokemon["ability_2"] === "NA") {
-      abilities = changeCase(pokemon["ability_1"]);
+      abilities = changeCase(pokemon?.ability_1);
     } else {
       abilities = (
         <div>
-          <div>{`1. ${changeCase(pokemon["ability_1"])}`}</div>
-          <div>{`2. ${changeCase(pokemon["ability_2"])}`}</div>
+          <div>{`1. ${changeCase(pokemon?.ability_1)}`}</div>
+          <div>{`2. ${changeCase(pokemon?.ability_2)}`}</div>
         </div>
       );
     }
@@ -253,7 +252,7 @@ export const DetailPage = () => {
                     <div>
                       {pokemon
                         ? pokemon.ability_hidden !== "NA"
-                          ? changeCase(pokemon.ability_hidden)
+                          ? changeCase(pokemon?.ability_hidden)
                           : "N/A"
                         : "N/A"}
                     </div>
@@ -275,7 +274,7 @@ export const DetailPage = () => {
                         ? pokemon.evolves_from_species_id !== "NA"
                           ? `#${fIdNumber(
                               pokemon.evolves_from_species_id,
-                            )} ${changeCase(pokemonEvolves.pokemon)}`
+                            )} ${changeCase(pokemonEvolves?.name)}`
                           : "N/A"
                         : "N/A"}
                     </div>
