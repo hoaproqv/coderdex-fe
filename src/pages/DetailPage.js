@@ -124,9 +124,9 @@ export const DetailPage = () => {
                 fontSize={24}
                 fontWeight={700}
               >
-                {previousPokemon?.pokemon
-                  ? previousPokemon.pokemon[0].toUpperCase() +
-                    previousPokemon.pokemon.slice(1)
+                {previousPokemon?.name
+                  ? previousPokemon.name[0].toUpperCase() +
+                    previousPokemon.name.slice(1)
                   : "Unknown"}
               </Typography>
             </Box>
@@ -151,9 +151,9 @@ export const DetailPage = () => {
                 fontWeight={700}
                 marginRight={1}
               >
-                {nextPokemon?.pokemon
-                  ? nextPokemon.pokemon[0].toUpperCase() +
-                    nextPokemon.pokemon.slice(1)
+                {nextPokemon?.name
+                  ? nextPokemon.name[0].toUpperCase() +
+                    nextPokemon.name.slice(1)
                   : "Unknown"}
               </Typography>
               <Typography color="white" fontSize={24} fontWeight={700}>
@@ -183,8 +183,8 @@ export const DetailPage = () => {
         >
           <Box bgcolor="white" pt={2}>
             <Typography sx={{ mr: 2 }} variant="h4" display="inline">
-              {pokemon?.pokemon
-                ? pokemon.pokemon[0].toUpperCase() + pokemon.pokemon.slice(1)
+              {pokemon?.name
+                ? pokemon.name[0].toUpperCase() + pokemon.name.slice(1)
                 : "Unknown"}
             </Typography>
             <Typography variant="h4" display="inline" color="gray">

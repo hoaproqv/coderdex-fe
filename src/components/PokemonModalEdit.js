@@ -32,7 +32,7 @@ const schema = yup
 
 export default function PokemonModalEdit({ openEdit, setOpenEdit }) {
   // useSelector
-  const pokemon = useSelector((state) => state.pokemons.pokemon.pokemon);
+  const { pokemon } = useSelector((state) => state.pokemons.pokemon);
   const { isLoading } = useSelector((state) => state.pokemons);
   //useState
   const [errorStatus, setErrorStatus] = useState(false);
@@ -95,7 +95,7 @@ export default function PokemonModalEdit({ openEdit, setOpenEdit }) {
   }, [type1, type2]);
 
   useEffect(() => {
-    setValue("name", pokemon?.pokemon);
+    setValue("name", pokemon?.name);
     setValue("id", pokemon?.id);
     setValue("height", pokemon?.height);
     setValue("weight", pokemon?.weight);

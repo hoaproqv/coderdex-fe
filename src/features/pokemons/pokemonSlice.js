@@ -170,7 +170,7 @@ export const addPokemon =
       const imageUrl = await cloudinaryUpload(image);
       const body = {
         id: id,
-        pokemon: name,
+        name: name,
         height: height || "NA",
         weight: weight || "NA",
         type_1: types[0],
@@ -225,7 +225,7 @@ export const editPokemon =
       }
       const body = {
         id: id,
-        pokemon: name,
+        name: name,
         height: height || "NA",
         weight: weight || "NA",
         type_1: types[0],

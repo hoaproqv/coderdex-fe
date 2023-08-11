@@ -179,7 +179,7 @@ export default function PokeList() {
         ) : (
           <InfiniteScroll
             style={{ paddingBottom: "1rem", overflow: "visible!important" }}
-            dataLength={pokemons.length}
+            dataLength={pokemons?.length}
             next={handleChangePage}
             hasMore={next}
             loader={
@@ -221,7 +221,7 @@ export default function PokeList() {
                       sm={6}
                       md={4}
                       lg={3}
-                      key={pokemon.pokemon}
+                      key={pokemon.name}
                     >
                       <Card
                         component={Link}
@@ -257,8 +257,8 @@ export default function PokeList() {
                             #{`00${pokemon.id}`.slice(-3)}
                           </Typography>
                           <Typography variant="h5">
-                            {pokemon.pokemon.charAt(0).toUpperCase() +
-                              pokemon.pokemon.slice(1)}
+                            {pokemon.name.charAt(0).toUpperCase() +
+                              pokemon.name.slice(1)}
                           </Typography>
                         </CardContent>
                         <CardActions disableSpacing sx={{ padding: "1rem" }}>
